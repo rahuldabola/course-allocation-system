@@ -31,54 +31,81 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">AI Assistant</h1>
-        <p className="text-sm text-slate-500">Ask questions about allocations in plain English. Powered by a local LLM (text-to-SQL).</p>
+        <h1 className="text-3xl font-bold">🤖 AI Assistant</h1>
+        <p className="text-slate-600 text-sm mt-1">Ask questions about allocations in natural language. Powered by local LLM (text-to-SQL).</p>
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); ask(question); }} className="card flex gap-3">
-        <input className="input" placeholder="e.g. Which course had the highest rejection rate?"
+        <input className="input flex-1" placeholder="e.g. Which course had the highest rejection rate?" 
           value={question} onChange={(e) => setQuestion(e.target.value)} />
-        <button className="btn" disabled={busy}>{busy ? "Thinking…" : "Ask"}</button>
+        <button className="btn whitespace-nowrap" disabled={busy}>{busy ? "⏳ Thinking…" : "🔍 Ask"}</button>
       </form>
 
-      <div className="flex flex-wrap gap-2">
-        {SAMPLES.map((s) => (
-          <button key={s} className="btn-ghost text-xs" onClick={() => ask(s)} disabled={busy}>{s}</button>
-        ))}
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-slate-600">Try asking:</p>
+        <div className="flex flex-wrap gap-2">
+          {SAMPLES.map((s) => (
+            <button key={s} className="btn-ghost text-xs px-3 py-1.5" onClick={() => ask(s)} disabled={busy}>
+              → {s}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-4">
         {turns.map((t, i) => (
-          <div key={i} className="card space-y-3">
-            <p className="font-medium">🧑 {t.q}</p>
-            {t.error && <p className="text-red-600 text-sm">{t.error}</p>}
+          <div key={i} className="card space-y-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">👤</span>
+              <p className="font-semibold text-slate-800 pt-1">{t.q}</p>
+            </div>
+            {t.error && <div className="error-box">{t.error}</div>}
             {t.res && (
               <>
-                <p className="text-slate-800">🤖 {t.res.answer}</p>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className={`badge ${t.res.source === "llm" ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"}`}>
-                    {t.res.source === "llm" ? "LLM" : "built-in report"}
+                <div className="flex items-start gap-3 bg-slate-50 rounded-lg p-4">
+                  <span className="text-2xl flex-shrink-0">🤖</span>
+                  <div className="flex-1">
+                    <p className="text-slate-800">{t.res.answer}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={`badge ${t.res.source === "llm" ? "badge-primary" : "badge-success"}`}>
+                    {t.res.source === "llm" ? "🧠 LLM Generated" : "📊 Built-in Report"}
                   </span>
                 </div>
                 {t.res.sql && (
-                  <pre className="bg-slate-900 text-slate-100 text-xs rounded-lg p-3 overflow-x-auto">{t.res.sql}</pre>
+                  <details className="text-xs">
+                    <summary className="cursor-pointer font-semibold text-slate-600 hover:text-slate-800">Show SQL query</summary>
+                    <pre className="bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto mt-2 text-xs">{t.res.sql}</pre>
+                  </details>
                 )}
                 {t.res.rows.length > 0 && (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
                     <table className="w-full">
                       <thead>
-                        <tr>{Object.keys(t.res.rows[0]).map((k) => <th key={k} className="th">{k}</th>)}</tr>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          {Object.keys(t.res.rows[0]).map((k) => (
+                            <th key={k} className="th">{k}</th>
+                          ))}
+                        </tr>
                       </thead>
                       <tbody>
-                        {t.res.rows.slice(0, 25).map((row, ri) => (
-                          <tr key={ri}>
-                            {Object.values(row).map((v, vi) => <td key={vi} className="td">{String(v)}</td>)}
+                        {t.res.rows.slice(0, 10).map((row, ri) => (
+                          <tr key={ri} className="tr-hover">
+                            {Object.values(row).map((v, vi) => (
+                              <td key={vi} className="td">{String(v)}</td>
+                            ))}
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                    {t.res.rows.length > 10 && (
+                      <p className="text-xs text-slate-500 p-3 border-t border-slate-200">
+                        Showing 10 of {t.res.rows.length} results
+                      </p>
+                    )}
                   </div>
                 )}
               </>

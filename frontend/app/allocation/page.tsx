@@ -21,58 +21,93 @@ export default function AllocationPage() {
   }
 
   const badge = (rank: number) =>
-    rank === 1 ? "bg-emerald-100 text-emerald-700"
-      : rank === 2 ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700";
+    rank === 1 ? "badge-success"
+      : rank === 2 ? "badge-warning" : "badge-danger";
+
+  const successRate = summary ? Math.round((summary.allocated / summary.total) * 100) : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Allocation</h1>
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">✨ Course Allocation</h1>
+          <p className="text-slate-600 text-sm mt-1">Run the allocation algorithm and view results</p>
+        </div>
         <button className="btn" onClick={run} disabled={busy}>
-          {busy ? "Processing…" : "▶ Run allocation"}
+          {busy ? "⏳ Processing…" : "▶️ Run Allocation"}
         </button>
       </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+
+      {error && <div className="error-box">{error}</div>}
 
       {summary && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="card"><p className="label">Total</p><p className="text-2xl font-bold">{summary.total}</p></div>
-          <div className="card"><p className="label">Allocated</p><p className="text-2xl font-bold text-emerald-600">{summary.allocated}</p></div>
-          <div className="card"><p className="label">Unallocated</p><p className="text-2xl font-bold text-red-500">{summary.unallocated}</p></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="stat-card">
+            <p className="label">Total Students</p>
+            <p className="text-3xl font-bold text-slate-800 mt-2">{summary.total}</p>
+          </div>
+          <div className="stat-card-gradient">
+            <p className="label text-brand-700">Successfully Allocated</p>
+            <p className="text-3xl font-bold text-emerald-600 mt-2">{summary.allocated}</p>
+            <p className="text-xs text-slate-600 mt-3">
+              <span className="font-semibold text-brand">{successRate}%</span> success rate
+            </p>
+          </div>
+          <div className="stat-card">
+            <p className="label">Pending Allocation</p>
+            <p className="text-3xl font-bold text-red-500 mt-2">{summary.unallocated}</p>
+          </div>
         </div>
       )}
 
       <div className="card overflow-x-auto">
+        <div className="section-header mb-6">
+          <div>
+            <h2 className="text-lg font-semibold">Allocation Results</h2>
+            <p className="text-sm text-slate-500 mt-1">{rows.length} allocation{rows.length !== 1 ? "s" : ""}</p>
+          </div>
+        </div>
         <table className="w-full">
           <thead>
-            <tr>
-              <th className="th">Student</th><th className="th">Marks</th>
-              <th className="th">Category</th><th className="th">Course</th>
-              <th className="th">Seat</th><th className="th">Preference</th>
+            <tr className="border-b border-slate-200 bg-slate-50">
+              <th className="th">Student</th>
+              <th className="th">Marks</th>
+              <th className="th">Category</th>
+              <th className="th">Allocated Course</th>
+              <th className="th">Seat Type</th>
+              <th className="th">Preference Rank</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((a) => (
-              <tr key={a.student_id}>
+              <tr key={a.student_id} className="tr-hover">
                 <td className="td">
-                  <div className="font-medium">{a.student_name}</div>
-                  <div className="font-mono text-xs text-slate-400">{a.roll_no}</div>
+                  <div className="font-semibold text-slate-800">{a.student_name}</div>
+                  <div className="font-mono text-xs text-slate-500 mt-0.5">{a.roll_no}</div>
                 </td>
-                <td className="td">{a.marks}</td>
-                <td className="td">{a.category_code}</td>
-                <td className="td font-medium">{a.course_name}</td>
                 <td className="td">
-                  <span className={`badge ${a.seat_type === "open" ? "bg-slate-100 text-slate-600" : "bg-indigo-100 text-indigo-700"}`}>
-                    {a.seat_type}
+                  <span className="badge badge-primary">{a.marks}</span>
+                </td>
+                <td className="td">
+                  <span className={`badge ${a.category_code === "General" ? "badge-info" : "badge-warning"}`}>
+                    {a.category_code}
+                  </span>
+                </td>
+                <td className="td font-semibold text-slate-800">{a.course_name}</td>
+                <td className="td">
+                  <span className={`badge ${a.seat_type === "open" ? "badge-info" : "badge-primary"}`}>
+                    {a.seat_type === "open" ? "General" : a.seat_type.toUpperCase()}
                   </span>
                 </td>
                 <td className="td">
-                  <span className={`badge ${badge(a.preference_rank)}`}>#{a.preference_rank}</span>
+                  <span className={`badge ${badge(a.preference_rank)}`}>
+                    #{a.preference_rank} choice
+                  </span>
                 </td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td className="td text-slate-400" colSpan={6}>No allocations yet. Click “Run allocation”.</td></tr>
+              <tr><td className="td text-slate-400 py-8 text-center" colSpan={6}>No allocations yet. Click "Run Allocation" to start.</td></tr>
             )}
           </tbody>
         </table>
